@@ -18,7 +18,11 @@ namespace ShootingGallery
         private MouseState _mouseState;
 
         private Vector2 _targetPosition;
+        private Vector2 _targetCenter;
         private Vector2 _crosshairsPostion;
+
+        private int _targetRadius;
+        private bool _mReleased;
 
         public Game1()
         {
@@ -31,6 +35,7 @@ namespace ShootingGallery
         {
             // TODO: Add your initialization logic here
             _random = new Random();
+            _mReleased = true;
 
             base.Initialize();
         }
@@ -45,7 +50,10 @@ namespace ShootingGallery
             _target = Content.Load<Texture2D>("target");
             _crosshair = Content.Load<Texture2D>("crosshairs");
 
-            _targetPosition = new Vector2(_random.NextInt64(0, _graphics.PreferredBackBufferWidth) - (_target.Width / 2), _random.NextInt64(0, _graphics.PreferredBackBufferHeight) - (_target.Height / 2));
+            _targetRadius = Math.Max(_target.Width, _target.Height) / 2;
+
+            _targetPosition = new Vector2(_random.Next(_target.Width, _graphics.PreferredBackBufferWidth - _target.Width), _random.Next(_target.Height, _graphics.PreferredBackBufferHeight - _target.Height));
+            _targetPosition += new Vector2(_target.Width / 2f, _target.Height / 2f);
         }
 
         protected override void Update(GameTime gameTime)
@@ -59,13 +67,22 @@ namespace ShootingGallery
 
             _crosshairsPostion = new Vector2(_mouseState.X - (_crosshair.Width / 2), _mouseState.Y - (_crosshair.Height / 2));
 
-            if (Vector2.Distance(_crosshairsPostion, _targetPosition) < (_target.Width / 2f) || Vector2.Distance(_crosshairsPostion, _targetPosition) < (_target.Height / 2f))
-            {
-                if (_mouseState.LeftButton == ButtonState.Pressed)
-                {
-                    _targetPosition = new Vector2(_random.NextInt64(0, _graphics.PreferredBackBufferWidth) - (_target.Width / 2), _random.NextInt64(0 , _graphics.PreferredBackBufferHeight) - (_target.Height / 2));
+            _targetCenter = _targetPosition + new Vector2(_target.Width / 2f, _target.Height / 2f);
 
+            if (Vector2.Distance(_crosshairsPostion, _targetCenter) < _targetRadius)
+            {
+                if (_mouseState.LeftButton == ButtonState.Pressed && _mReleased == true)
+                {
+                    _targetPosition = new Vector2(_random.Next(_target.Width, _graphics.PreferredBackBufferWidth - _target.Width), _random.Next(_target.Height, _graphics.PreferredBackBufferHeight - _target.Height));
+                    _targetPosition += new Vector2(_target.Width / 2f, _target.Height / 2f);
+
+                    _mReleased = false;
                 }
+            }
+
+            if (_mouseState.LeftButton == ButtonState.Released)
+            {
+                _mReleased = true;
             }
 
             base.Update(gameTime);
